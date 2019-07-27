@@ -23,12 +23,12 @@ with open('model/implicit_dataset.pkl', 'rb') as f:
 with open('model/implicit_interactions.pkl', 'rb') as f:
     interactions_implicit = pickle.load(f)
 # This model has 10 components, uses the full item_features matrix and takes 1.5 minutes to train
-# with open('model/explicit_model.pkl', 'rb') as f:
-#     model_explicit = pickle.load(f)
+with open('model/explicit_model.pkl', 'rb') as f:
+    model_explicit = pickle.load(f)
 # This has 10 components and uses the truncated item_features matrix
 # Does not seem to have helped the slowness
-with open('model/model_trunc.pkl', 'rb') as f:
-    model_explicit = pickle.load(f)
+# with open('model/model_trunc.pkl', 'rb') as f:
+#     model_explicit = pickle.load(f)
 with open('model/explicit_dataset.pkl', 'rb') as f:
     dataset_explicit = pickle.load(f)
 with open('model/explicit_interactions.pkl', 'rb') as f:
@@ -38,11 +38,11 @@ with open('model/weights.pkl', 'rb') as f:
 with open('model/item_features.pkl', 'rb') as f:
     item_features = pickle.load(f)
 # This is the full item_features matrix
-# with open('model/item_features.pkl', 'rb') as f:
-#     item_features_trunc = pickle.load(f)
+with open('model/item_features.pkl', 'rb') as f:
+    item_features_trunc = pickle.load(f)
 # This is the truncated item features matrix
-with open('model/item_features_trunc.pkl', 'rb') as f:
-    item_features = pickle.load(f)
+# with open('model/item_features_trunc.pkl', 'rb') as f:
+#     item_features = pickle.load(f)
 
 @app.route('/')
 @app.route('/index')

@@ -1,28 +1,3 @@
-def train_test_split(ratings, size=10, max_percent = 0.8):
-    '''Split a recommender matrix 'ratings' into train and test matrices of the same dimensions
-    by removing random entries for each user (number removed = 'size') 
-    Slightly modified from method found here:
-    https://blog.insightdatascience.com/explicit-matrix-factorization-als-sgd-and-all-that-jazz-b00e4d9b21ea'''
-    import numpy as np
-    test = np.zeros(ratings.shape)
-    train = ratings.copy()
-    for user in range(ratings.shape[0]):
-        max_size = int(max_percent * ratings[user, :].nonzero()[0].shape[0])
-        if size <= max_size:
-            test_ratings = np.random.choice(ratings[user, :].nonzero()[0], 
-                                            size=size, 
-                                            replace=False)
-        else:
-            test_ratings = np.random.choice(ratings[user, :].nonzero()[0], 
-                                            size=max_size, 
-                                            replace=False)
-        train[user, test_ratings] = 0.
-        test[user, test_ratings] = ratings[user, test_ratings]
-        
-    # Test and training are truly disjoint
-    assert(np.all((train * test) == 0)) 
-    return train, test
-
 # NDCG at k from this code:
 # https://gist.github.com/bwhite/3726239
 
