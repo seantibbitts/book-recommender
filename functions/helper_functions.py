@@ -180,7 +180,7 @@ def predict_for_user_implicit_lightfm(model, dataset, interactions, books, item_
 
 
 def predict_for_user_explicit_lightfm(model, dataset, interactions, books, item_features=None, model_user_id = 0, num_recs = 5):
-    '''Takes a trained LightFM model, a LightFM dataset, the dataframes of ratings, to-read books and book information,
+    '''Takes a trained LightFM model, a LightFM dataset, the dataframe of book information,
     the internal model user ID and a number of recommendations and returns the top 5 recommended titles that have not
     been interacted with'''
     import numpy as np
