@@ -134,16 +134,11 @@ def predict_for_user_implicit_lightfm(model, dataset, interactions, books, item_
     user_id_rev_map = {v:k for k, v in user_id_map.items()}
     item_id_rev_map = {v:k for k, v in item_id_map.items()}
 
-    # user_id = user_id_rev_map[model_user_id]
-
     all_item_ids = list(item_id_map.values())
 
     raw_predictions = model.predict(model_user_id, all_item_ids, item_features = item_features)
 
     user_predictions = pd.DataFrame({'predictions':raw_predictions, 'model_book_id':all_item_ids})
-
-    #user_interactions = ratings.loc[ratings['user_id']==user_id, ['user_id','book_id']].append(to_read[to_read['user_id']==user_id])
-    #user_interactions['model_book_id'] = user_interactions['book_id'].map(item_id_map)
 
     user_noninteractions = np.where(interactions.toarray()[model_user_id]==0)[0]
 
@@ -165,16 +160,11 @@ def predict_for_user_explicit_lightfm(model, dataset, interactions, books, item_
     user_id_rev_map = {v:k for k, v in user_id_map.items()}
     item_id_rev_map = {v:k for k, v in item_id_map.items()}
 
-    # user_id = user_id_rev_map[model_user_id]
-
     all_item_ids = list(item_id_map.values())
 
     raw_predictions = model.predict(model_user_id, all_item_ids, item_features = item_features)
 
     user_predictions = pd.DataFrame({'predictions':raw_predictions, 'model_book_id':all_item_ids})
-
-    #user_interactions = ratings.loc[ratings['user_id']==user_id, ['user_id','book_id']].append(to_read[to_read['user_id']==user_id])
-    #user_interactions['model_book_id'] = user_interactions['book_id'].map(item_id_map)
 
     user_noninteractions = np.where(interactions.toarray()[model_user_id]==0)[0]
 
