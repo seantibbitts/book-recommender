@@ -22,7 +22,7 @@ with open('model/implicit_dataset.pkl', 'rb') as f:
     dataset_implicit = pickle.load(f)
 with open('model/implicit_interactions.pkl', 'rb') as f:
     interactions_implicit = pickle.load(f)
-# This model has 10 components and takes 1.5 minutes to train
+# This model has 10 components, uses the full item_features matrix and takes 1.5 minutes to train
 # with open('model/explicit_model.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
 # This has 10 components and uses the truncated item_features matrix
