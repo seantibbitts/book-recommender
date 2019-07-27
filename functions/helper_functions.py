@@ -23,7 +23,7 @@ def train_test_split(ratings, size=10, max_percent = 0.8):
     assert(np.all((train * test) == 0)) 
     return train, test
 
-# NCDG at k from this code:
+# NDCG at k from this code:
 # https://gist.github.com/bwhite/3726239
 
 def dcg_at_k(r, k, method=0):
