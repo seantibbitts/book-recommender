@@ -82,10 +82,10 @@ def explicit_recs():
         sys.stdout.flush()
         print('Now fitting updated matrix to model')
         sys.stdout.flush()
+        # This takes between 1.5 to 8 minutes depending on the complexity of the model
         model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=1)
         print('Model fitting complete')
         sys.stdout.flush()
-        # This takes between 1.5 to 8 minutes depending on the complexity of the model
         predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit_aug,
         books, item_features=item_features, model_user_id = 53424, num_recs = 24).to_dict(orient='records')
         time_elapsed = time.time() - start_time
