@@ -25,10 +25,6 @@ with open('model/implicit_interactions.pkl', 'rb') as f:
 # This model has 10 components and takes 1.5 minutes to train
 # with open('model/explicit_model.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This model has 150 components and takes 8 minutes to train
-# with open('model/model-180-epochs-dict.pkl', 'rb') as f:
-#     model_180_epochs_dict = pickle.load(f)
-#     model_explicit = model_180_epochs_dict['recommender']
 # This model uses the truncated item_features matrix
 with open('model/model_trunc.pkl', 'rb') as f:
     model_explicit = pickle.load(f)
