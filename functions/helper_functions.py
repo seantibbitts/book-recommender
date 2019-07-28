@@ -175,3 +175,39 @@ def predict_for_user_explicit_lightfm(model, dataset, interactions, books, item_
     user_recommendations['book_id'] = user_recommendations['model_book_id'].map(item_id_rev_map)
 
     return user_recommendations.merge(books[['book_id','authors','title','average_rating','image_url','goodreads_book_id']])
+
+def predict_for_user_knn_lightfm(lightfm_model, lightfm_dataset, lightfm_weights, books, user_vector, item_features=None, num_recs=5):
+    # from scipy import sparse
+    import numpy as np
+    import pandas as pd
+    from sklearn.metrics.pairwise import cosine_similarity
+
+    user_id_map = lightfm_dataset.mapping()[0]
+    item_id_map = lightfm_dataset.mapping()[2]
+    user_id_rev_map = {v:k for k, v in user_id_map.items()}
+    item_id_rev_map = {v:k for k, v in item_id_map.items()}
+
+    all_item_ids = sorted(list(item_id_map.values()))
+    # Compute cosine similarity between each row of weights and the user_vector
+    # if sparse.issparse(lightfm_weights):
+    #     weights = lightfm_weights.toarray()
+    # else
+    #     weights = lightfm_weights
+    similarity = cosine_similarity(lightfm_weights, user_vector)
+    pred_list = []
+    for user_id in range(lightfm_weights.shape[0]):
+        predicted = lightfm_model.predict(user_id, all_item_ids, item_features=item_features)
+        pred_list.append(predicted)
+    all_predicted = np.array(pred_list)
+    all_pred_sim = all_predicted * similarity
+    books_pred = all_pred_sim.sum(axis = 0)
+
+    user_predictions = pd.DataFrame({'predictions':books_pred, 'model_book_id':all_item_ids})
+
+    user_noninteractions = np.where(user_vector==0)[0]
+
+    user_recommendations = user_predictions[user_predictions['model_book_id'].isin(user_noninteractions) &
+                                            (user_predictions['predictions']>=3)].sort_values('predictions', ascending=False).iloc[:num_recs]
+    user_recommendations['book_id'] = user_recommendations['model_book_id'].map(item_id_rev_map)
+
+    return user_recommendations.merge(books[['book_id','authors','title','average_rating','image_url','goodreads_book_id']])
