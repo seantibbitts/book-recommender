@@ -99,14 +99,16 @@ def get_ndcg_explicit_lightfm(model, dataset, weights, k):
     item_id_map = dataset.mapping()[2]
     all_item_ids = sorted(list(item_id_map.values()))
     ndcgs = []
+    rs = []
     for user_id in range(weights.shape[0]):
         predicted = model.predict(user_id, all_item_ids)
         nonzero_actual = np.nonzero(actual[user_id])
         sort_inds = predicted[nonzero_actual].argsort()[::-1]
         r = actual[user_id][nonzero_actual][sort_inds]
+        rs.append(r)
         this_ndcg = ndcg_at_k(r, k)
         ndcgs.append(this_ndcg)
-    return np.mean(ndcgs)
+    return np.mean(ndcgs), ndcgs, rs
 
 
 def predict_for_user(ratings, all_predicted_df, books, user_id = 1,
