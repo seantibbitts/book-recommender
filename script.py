@@ -29,7 +29,8 @@ with open('model/implicit_interactions.pkl', 'rb') as f:
 # Does not seem to have helped the slowness
 # with open('model/model_trunc.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This model uses adadelta instead of adagrad to run SGD
+# This model has 10 components and uses adadelta instead of adagrad to run SGD
+# It takes about 2 minutes to run
 with open('model/model_adadelta.pkl', 'rb') as f:
     model_explicit = pickle.load(f)
 with open('model/explicit_dataset.pkl', 'rb') as f:
