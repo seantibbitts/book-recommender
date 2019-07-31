@@ -108,7 +108,7 @@ def get_ndcg_explicit_lightfm(model, dataset, weights, k):
         rs.append(r)
         this_ndcg = ndcg_at_k(r, k)
         ndcgs.append(this_ndcg)
-    return np.mean(ndcgs), ndcgs, rs
+    return np.mean(ndcgs)
 
 
 def predict_for_user(ratings, all_predicted_df, books, user_id = 1,

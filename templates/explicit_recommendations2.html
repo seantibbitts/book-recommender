@@ -1,0 +1,124 @@
+<div class="row my-4">
+{% if predictions is defined and predictions|length %}
+    {% for prediction in predictions %}
+    {% if ((loop.index-1) % 6==0)  and (loop.index-1 != 0) %}
+    </div>
+    <div class="row my-4">
+    {% endif %}
+        <div class="col-md-2">
+            <div class="card" id="img-{{prediction['model_book_id']}}">
+                <a href="https://www.goodreads.com/book/show/{{prediction['goodreads_book_id']}}" target="_blank">
+                    <img src="{{prediction['image_url']}}" class="card-img-top" alt="{{prediction['title']}}">
+                </a>
+                <div class="card-body">
+                <h5 class="card-title">{{prediction['title']}}</h5>
+                <p class="card-text">{{prediction['authors']}}</p>
+                <div class="rating" id="rating-{{prediction['model_book_id']}}"></div>
+                <a href="#" class="btn btn-primary btn-sm btn-block" data-toggle='modal' id="want-to-read-{{prediction['model_book_id']}}">Want to Read</a>
+                <a href="#" class="btn btn-secondary btn-sm btn-block" data-toggle='modal' id="dont-want-to-read-{{prediction['model_book_id']}}">Skip</a>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div id="refresh-div" class="col-md-12">
+        <input class="btn btn-danger" id="refresh" type="submit" value="Refresh Recommender">
+        <p>Note: this may take several minutes.</p>
+    </div>
+{% endif %}
+</div>
+<div id="loader"></div> 
+    <script>
+            /* Javascript */
+            var id_array = [];
+            $("div[id*=rating-]").each(function(){
+                id_array.push($(this).attr('id').substring(7));
+            });
+            var avgRatings = {};
+            //Make sure that the dom is ready
+            $(function () {
+            
+            {% if predictions is defined and predictions|length %}
+                {% for prediction in predictions %}
+                $("#rating-{{prediction['model_book_id']}}").rateYo({
+                    rating: {{prediction['average_rating']}},
+                    fullStar: true,
+                    starWidth: "20px",
+                    
+                    onInit: function(rating, rateYoInstance) {
+                        avgRatings["rating-{{prediction['model_book_id']}}"] = rating;
+                    },
+
+                    onSet: function(rating, rateYoInstance) {
+                        let index = $(this).attr('id').split("-").slice(-1);
+                        user_array[index] = rating; // Explicit rating
+                        if ($("#want-to-read-"+index).hasClass('active')) {
+                            $("#want-to-read-"+index).removeClass('active');
+                        };
+                        if ($("#dont-want-to-read-"+index).hasClass('active')) {
+                            $("#dont-want-to-read-"+index).removeClass('active');
+                        };
+                    }
+                });
+                $("#want-to-read-{{prediction['model_book_id']}}").click(function(event) {
+                    event.preventDefault();
+                    let index = $(this).attr('id').split("-").slice(-1);
+                    if ($(this).hasClass("active")) {
+                        if (user_array[index] === 4) {
+                            user_array[index] = 0;
+                        };
+                        $(this).removeClass('active');
+                    } else {
+                        $('#rating-'+index).rateYo('option','rating',avgRatings['rating-'+index]);
+                        user_array[index] = 4;
+                        $(this).addClass('active');
+                        if ($("#dont-want-to-read-"+index).hasClass('active')) {
+                            $("#dont-want-to-read-"+index).removeClass('active');
+                        };
+                    };
+                });
+                $("#dont-want-to-read-{{prediction['model_book_id']}}").click(function() {
+                    event.preventDefault();
+                    let index = $(this).attr('id').split("-").slice(-1);
+                    if ($(this).hasClass("active")) {
+                        if (user_array[index] === 2) {
+                            user_array[index] = 0;
+                        };
+                        $(this).removeClass('active');
+                    } else {
+                        $('#rating-'+index).rateYo('option','rating',avgRatings['rating-'+index]);
+                        user_array[index] = 2;
+                        $(this).addClass('active');
+                        if ($("#want-to-read-"+index).hasClass('active')) {
+                            $("#want-to-read-"+index).removeClass('active');
+                        }
+                    };
+                });
+                {% endfor %}
+            {% else %}
+                $("#refresh").click(function() {
+                    user_json = JSON.stringify({array: user_array, msg: "refresh"});
+                    $.ajax({
+                        url:'/explicit-recommendations',
+                        type:"POST",
+                        data:user_json,
+                        contentType:"application/json; charset=utf-8",
+                        beforeSend: function() {
+                            $('#loader').show();
+                        },
+                        success: function(data, status){
+                            $('#predictions').html(data);
+                        },
+                        error: function(jqxhr, status, message) {
+                            console.log(`jqxhr: ${jqxhr}`);
+                            console.log(`status: ${status}`);
+                            console.log(`message: ${message}`);
+                        },
+                        complete: function() {
+                            $('#loader').hide();
+                        }
+                    });
+                });
+            {% endif %}
+            });
+        </script>
