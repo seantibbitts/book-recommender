@@ -2,7 +2,7 @@
 #cython: boundscheck=False, wraparound=False, cdivision=True, initializedcheck=False
 
 # This code was adapted from https://github.com/lyst/lightfm/blob/master/lightfm/_lightfm_fast.pyx.template
-# in the lightfm package created by Maceij Kula.
+# in the lightfm package created by Maciej Kula.
 
 import numpy as np
 
