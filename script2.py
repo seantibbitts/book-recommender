@@ -93,7 +93,7 @@ def explicit_recs():
         if msg=='update':
             print('Now updating last matrix row')
             sys.stdout.flush()
-            model_explicit.fit_partial_by_row(53424, interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=100)
+            model_explicit.fit_partial_by_row(53424, interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=50)
         else:
             print('Now fitting updated matrix to model')
             sys.stdout.flush()
