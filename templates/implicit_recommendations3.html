@@ -1,0 +1,25 @@
+<div class="row my-4">
+{% if predictions is defined and predictions|length %}
+    {% for prediction in predictions %}
+    {% if ((loop.index-1) % 6==0)  and (loop.index-1 != 0) %}
+    </div>
+    <div class="row my-4">
+    {% endif %}
+        <div class="col-md-2">
+            <div class="card" id="img-{{prediction['model_book_id']}}">
+                <a href="https://www.goodreads.com/book/show/{{prediction['goodreads_book_id']}}" target="_blank">
+                    <img src="{{prediction['image_url']}}" class="card-img-top" alt="{{prediction['title']}}">
+                </a>
+                <div class="card-body">
+                <h5 class="card-title">{{prediction['title']}}</h5>
+                <p class="card-text">{{prediction['authors']}}</p>
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+{% else %}
+    <div id="apology-div" class="col-md-12">
+        <p>We're sorry. There don't seem to be any recommendations for you.</p>
+    </div>
+{% endif %}
+</div>

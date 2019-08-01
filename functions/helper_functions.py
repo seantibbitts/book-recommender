@@ -148,7 +148,7 @@ def predict_for_user_implicit_lightfm(model, dataset, interactions, books, item_
     (user_predictions['predictions']>0)].sort_values('predictions', ascending = False).iloc[:num_recs,:]
     user_recommendations['book_id'] = user_recommendations['model_book_id'].map(item_id_rev_map)
 
-    return user_recommendations.merge(books[['book_id','authors','title','average_rating','image_url']])
+    return user_recommendations.merge(books[['book_id','authors','title','average_rating','image_url','goodreads_book_id']])
 
 
 def predict_for_user_explicit_lightfm(model, dataset, interactions, books, item_features=None, model_user_id = 0, num_recs = 5):
@@ -211,3 +211,109 @@ def predict_for_user_knn_lightfm(lightfm_model, lightfm_dataset, lightfm_weights
     user_recommendations['book_id'] = user_recommendations['model_book_id'].map(item_id_rev_map)
 
     return user_recommendations.merge(books[['book_id','authors','title','average_rating','image_url','goodreads_book_id']])
+
+def reviews_to_df(xml_string, books, dataset, explicit = True): 
+    """Adapted from this Medium post:
+    https://medium.com/@robertopreste/from-xml-to-pandas-dataframes-9292980b1c1c
+    Parse the Goodreads XML file and store the result in a pandas DataFrame."""
+    
+    import xml.etree.ElementTree as et
+    import pandas as pd
+    
+    xtree = et.fromstring(xml_string)
+    review_node = xtree.find('reviews')
+    reviews_end = review_node.attrib.get('end')
+    reviews_total = review_node.attrib.get('total')
+    if (reviews_total == 0) or (reviews_total == '0') or (reviews_total is None):
+        if explicit:
+            return pd.DataFrame(columns = ['book_id', 'work_id', 'rating', 'model_book_id']), reviews_end, reviews_total
+        else:
+            return pd.DataFrame(columns = ['book_id','work_id','model_book_id']), reviews_end, reviews_total
+    
+    res = []
+    for review in review_node:
+        if review is not None:
+            if review.find('id') is not None:
+                review_id = review.find('id').text
+            else:
+                review_id = None
+            if explicit:
+                if review.find('rating') is not None:
+                    rating = review.find('rating').text
+                else:
+                    rating = None
+            if review.find('book') is not None:
+                book = review.find('book')
+                if book.find('work') is not None:
+                    work = book.find('work')
+                    if work.find('id') is not None:
+                        work_id = work.find('id').text
+        if explicit:
+            res.append({'review_id':review_id, 'work_id':work_id, 'rating':rating})
+        else:
+            res.append({'review_id':review_id, 'work_id':work_id})
+        
+    result_df = pd.DataFrame(res)
+    if explicit:
+        result_df['rating'] = result_df['rating'].astype(int)
+        result_df_lim = result_df[result_df['rating']>0].copy()
+    else:
+        result_df_lim = result_df.copy()
+    result_df_lim['work_id'] = result_df_lim['work_id'].astype(int)
+    books_in_common1 = pd.merge(result_df_lim, books[['book_id','work_id']])
+    if explicit:
+        books_in_common =\
+        books_in_common1[['book_id','work_id','rating']].groupby(['book_id','work_id'])['rating'].max().reset_index()
+    else:
+        books_in_common = books_in_common1[['book_id','work_id']].drop_duplicates().copy()
+        
+    item_id_map = dataset.mapping()[2]
+    
+    books_in_common['model_book_id'] = books_in_common['book_id'].map(item_id_map)
+        
+    return books_in_common, reviews_end, reviews_total
+
+def get_reviews(api_key, user_id, books, dataset, shelf_name = None, explicit = True):
+    import requests
+    import time
+    page = 1
+    review_url = 'https://www.goodreads.com/review/list?v=2&key={}&id={}&per_page=200&page={}'
+    if shelf_name is not None:
+        shelf_string = f'&shelf={shelf_name}'
+    else:
+        shelf_string = ''
+    review_url += shelf_string
+    result = requests.get(review_url.format(api_key, user_id, page))
+    start_time = time.time()
+    reviews_df, end, total = reviews_to_df(result.text, books, dataset, explicit = explicit)
+    total_pages = int(total) // 200 + 1
+    
+    while page < total_pages:
+        page += 1
+        this_result = requests.get(review_url.format(api_key, user_id, page))
+        time_elapsed = time.time() - start_time
+        if time_elapsed < 1:
+            time.sleep(1 - time_elapsed)
+        this_reviews_df, end, this_total =\
+        reviews_to_df(this_result.text, books, dataset, explicit = explicit)
+        start_time = time.time()
+        reviews_df = reviews_df.append(this_reviews_df, ignore_index = True)
+    return reviews_df
+
+def get_user_array(reviews_df, explicit = True):
+    import numpy as np
+    user_array = np.zeros((1,10000))
+    for index, row in reviews_df.iterrows():
+        if explicit:
+            user_array[:,row['model_book_id']] = row['rating']
+        else:
+            user_array[:,row['model_book_id']] = 1
+    return user_array
+
+def get_implicit_interactions(api_key, user_id, books, dataset, shelf_names):
+    import pandas as pd
+    results_df = pd.DataFrame()
+    for shelf_name in shelf_names:
+        this_results_df = get_reviews(api_key, user_id, books, dataset, shelf_name, explicit = False)
+        results_df = results_df.append(this_results_df, ignore_index=True)
+    return results_df

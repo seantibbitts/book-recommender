@@ -33,8 +33,12 @@ with open('model/implicit_interactions.pkl', 'rb') as f:
 # with open('model/model_adadelta.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
 # This is an edited/extended/custom LightFM model
-# 10 components
-with open('model/model_lfe-10-components-1-epoch.pkl', 'rb') as f:
+# 10 components 1 epoch
+# with open('model/model_lfe-10-components-1-epoch.pkl', 'rb') as f:
+#     model_explicit = pickle.load(f)
+# This is an edited/extended/custom LightFM model
+# 10 components 200 epochs
+with open('model/model_lfe-10-components-200-epoch.pkl', 'rb') as f:
     model_explicit = pickle.load(f)
 with open('model/explicit_dataset.pkl', 'rb') as f:
     dataset_explicit = pickle.load(f)
@@ -98,7 +102,7 @@ def explicit_recs():
             print('Now fitting updated matrix to model')
             sys.stdout.flush()
             # This takes between 1.5 to 8 minutes depending on the complexity of the model
-            model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=1)
+            model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=5)
         print('Model fitting complete')
         sys.stdout.flush()
         predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit_aug,
