@@ -36,22 +36,22 @@ with open('model/implicit_dataset.pkl', 'rb') as f:
     dataset_implicit = pickle.load(f)
 with open('model/implicit_interactions.pkl', 'rb') as f:
     interactions_implicit = pickle.load(f)
-# This model has 10 components, uses the full item_features matrix and takes 1.5 minutes to train
+# # This model has 10 components, uses the full item_features matrix and takes 1.5 minutes to train
 # with open('model/explicit_model.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This has 10 components and uses the truncated item_features matrix
-# Does not seem to have helped the slowness
+# # This has 10 components and uses the truncated item_features matrix
+# # Does not seem to have helped the slowness
 # with open('model/model_trunc.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This model uses adadelta instead of adagrad to run SGD
+# # This model uses adadelta instead of adagrad to run SGD
 # with open('model/model_adadelta.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This is an edited/extended/custom LightFM model
-# 10 components 1 epoch
+# # This is an edited/extended/custom LightFM model
+# # 10 components 1 epoch
 # with open('model/model_lfe-10-components-1-epoch.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# This is an edited/extended/custom LightFM model
-# 10 components 200 epochs
+# # This is an edited/extended/custom LightFM model
+# # 10 components 200 epochs
 # with open('model/model_lfe-10-components-200-epoch.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
 model_explicit = LightFM(no_components=50, loss='warp', random_state=42)
@@ -87,7 +87,10 @@ def implicit_recs():
         print('Now requesting user reviews from Goodreads')
         sys.stdout.flush()
         reviews_df = get_implicit_interactions(api_key, user_id, books, dataset_implicit, shelf_names = ['read', 'currently-reading', 'to-read'])
-
+        time_reviews_received = time.time()
+        print('User reviews acquired')
+        print(f'Time taken: {datetime.timedelta(seconds=time_reviews_received-start_time)}')
+        sys.stdout.flush()
         interactions_array = get_user_array(reviews_df, explicit=False)
         print('Loaded interactions array')
         sys.stdout.flush()
@@ -104,13 +107,18 @@ def implicit_recs():
         print('Now fitting updated matrix to model')
         sys.stdout.flush()
         # This takes between 1.5 to 8 minutes depending on the complexity of the model
+        start_fitting_time = time.time()
         model_implicit.fit_partial(interactions_implicit_aug, item_features=item_features, epochs=1)
+        end_fitting_time = time.time()
         print('Model fitting complete')
+        print(f'Time to fit: {datetime.timedelta(seconds=end_fitting_time-start_fitting_time)}')
         sys.stdout.flush()
         predictions = predict_for_user_implicit_lightfm(model_implicit, dataset_implicit, interactions_implicit_aug,
         books, item_features=item_features, model_user_id = 53424, num_recs = 24).to_dict(orient='records')
-        time_elapsed = time.time() - start_time
+        finish_time = time.time()
+        time_elapsed = finish_time - start_time
         print('Predictions generated')
+        print(f'Time to generate predictions: {datetime.timedelta(seconds=finish_time-end_fitting_time)}')
         print(f'Time to run: {datetime.timedelta(seconds=time_elapsed)}')
 
         return render_template('implicit_recommendations3.html', predictions = predictions)

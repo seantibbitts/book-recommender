@@ -87,7 +87,30 @@ def get_ndcg(predicted, actual, k):
         ndcgs.append(this_ndcg)
     return np.mean(ndcgs)
 
-def get_ndcg_explicit_lightfm(model, dataset, weights, k):
+def get_ndcg_implicit_lightfm(model, dataset, interactions, user_features=None, item_features=None, k=5):
+    '''Returns the mean NDCG at k for a given model, dataset and interactions matrix'''
+    from scipy import sparse
+    import pandas as pd
+    import numpy as np
+    if sparse.issparse(interactions):
+        actual = interactions.toarray()
+    else:
+        actual = interactions
+    item_id_map = dataset.mapping()[2]
+    all_item_ids = sorted(list(item_id_map.values()))
+    ndcgs = []
+    rs = []
+    for user_id in range(interactions.shape[0]):
+        predicted = model.predict(user_id, all_item_ids, user_features=user_features, item_features=item_features)
+        nonzero_actual = np.nonzero(actual[user_id])
+        sort_inds = predicted[nonzero_actual].argsort()[::-1]
+        r = actual[user_id][nonzero_actual][sort_inds]
+        rs.append(r)
+        this_ndcg = ndcg_at_k(r, k)
+        ndcgs.append(this_ndcg)
+    return np.mean(ndcgs)
+
+def get_ndcg_explicit_lightfm(model, dataset, weights, user_features=None, item_features=None, k=5):
     '''Returns the mean NDCG at k for a given model, dataset and weight matrix'''
     from scipy import sparse
     import pandas as pd
@@ -101,7 +124,7 @@ def get_ndcg_explicit_lightfm(model, dataset, weights, k):
     ndcgs = []
     rs = []
     for user_id in range(weights.shape[0]):
-        predicted = model.predict(user_id, all_item_ids)
+        predicted = model.predict(user_id, all_item_ids, user_features=user_features, item_features = item_features)
         nonzero_actual = np.nonzero(actual[user_id])
         sort_inds = predicted[nonzero_actual].argsort()[::-1]
         r = actual[user_id][nonzero_actual][sort_inds]
@@ -220,56 +243,65 @@ def reviews_to_df(xml_string, books, dataset, explicit = True):
     import xml.etree.ElementTree as et
     import pandas as pd
     
+    class GoodreadsException(Exception):
+        pass
+    
     xtree = et.fromstring(xml_string)
+    error = xtree.find('error')
+    if error is not None:
+        raise GoodreadsException(error.text)
     review_node = xtree.find('reviews')
-    reviews_end = review_node.attrib.get('end')
-    reviews_total = review_node.attrib.get('total')
-    if (reviews_total == 0) or (reviews_total == '0') or (reviews_total is None):
-        if explicit:
-            return pd.DataFrame(columns = ['book_id', 'work_id', 'rating', 'model_book_id']), reviews_end, reviews_total
-        else:
-            return pd.DataFrame(columns = ['book_id','work_id','model_book_id']), reviews_end, reviews_total
-    
-    res = []
-    for review in review_node:
-        if review is not None:
-            if review.find('id') is not None:
-                review_id = review.find('id').text
-            else:
-                review_id = None
+    if review_node is not None:
+        reviews_end = review_node.attrib.get('end')
+        reviews_total = review_node.attrib.get('total')
+        if (reviews_total == 0) or (reviews_total == '0') or (reviews_total is None):
             if explicit:
-                if review.find('rating') is not None:
-                    rating = review.find('rating').text
+                return pd.DataFrame(columns = ['book_id', 'work_id', 'rating', 'model_book_id']), reviews_end, reviews_total
+            else:
+                return pd.DataFrame(columns = ['book_id','work_id','model_book_id']), reviews_end, reviews_total
+
+        res = []
+        for review in review_node:
+            if review is not None:
+                if review.find('id') is not None:
+                    review_id = review.find('id').text
                 else:
-                    rating = None
-            if review.find('book') is not None:
-                book = review.find('book')
-                if book.find('work') is not None:
-                    work = book.find('work')
-                    if work.find('id') is not None:
-                        work_id = work.find('id').text
+                    review_id = None
+                if explicit:
+                    if review.find('rating') is not None:
+                        rating = review.find('rating').text
+                    else:
+                        rating = None
+                if review.find('book') is not None:
+                    book = review.find('book')
+                    if book.find('work') is not None:
+                        work = book.find('work')
+                        if work.find('id') is not None:
+                            work_id = work.find('id').text
+            if explicit:
+                res.append({'review_id':review_id, 'work_id':work_id, 'rating':rating})
+            else:
+                res.append({'review_id':review_id, 'work_id':work_id})
+
+        result_df = pd.DataFrame(res)
         if explicit:
-            res.append({'review_id':review_id, 'work_id':work_id, 'rating':rating})
+            result_df['rating'] = result_df['rating'].astype(int)
+            result_df_lim = result_df[result_df['rating']>0].copy()
         else:
-            res.append({'review_id':review_id, 'work_id':work_id})
-        
-    result_df = pd.DataFrame(res)
-    if explicit:
-        result_df['rating'] = result_df['rating'].astype(int)
-        result_df_lim = result_df[result_df['rating']>0].copy()
+            result_df_lim = result_df.copy()
+        result_df_lim['work_id'] = result_df_lim['work_id'].astype(int)
+        books_in_common1 = pd.merge(result_df_lim, books[['book_id','work_id']])
+        if explicit:
+            books_in_common =\
+            books_in_common1[['book_id','work_id','rating']].groupby(['book_id','work_id'])['rating'].max().reset_index()
+        else:
+            books_in_common = books_in_common1[['book_id','work_id']].drop_duplicates().copy()
+
+        item_id_map = dataset.mapping()[2]
+
+        books_in_common['model_book_id'] = books_in_common['book_id'].map(item_id_map)
     else:
-        result_df_lim = result_df.copy()
-    result_df_lim['work_id'] = result_df_lim['work_id'].astype(int)
-    books_in_common1 = pd.merge(result_df_lim, books[['book_id','work_id']])
-    if explicit:
-        books_in_common =\
-        books_in_common1[['book_id','work_id','rating']].groupby(['book_id','work_id'])['rating'].max().reset_index()
-    else:
-        books_in_common = books_in_common1[['book_id','work_id']].drop_duplicates().copy()
-        
-    item_id_map = dataset.mapping()[2]
-    
-    books_in_common['model_book_id'] = books_in_common['book_id'].map(item_id_map)
+        raise GoodreadsException('This user\'s Goodreads account appears to be protected.')
         
     return books_in_common, reviews_end, reviews_total
 
