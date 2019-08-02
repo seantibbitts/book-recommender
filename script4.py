@@ -61,12 +61,10 @@ with open('model/explicit_interactions.pkl', 'rb') as f:
     interactions_explicit = pickle.load(f)
 with open('model/weights.pkl', 'rb') as f:
     weights_explicit = pickle.load(f)
+# # This is the full item_features matrix
 with open('model/item_features.pkl', 'rb') as f:
     item_features = pickle.load(f)
-# This is the full item_features matrix
-with open('model/item_features.pkl', 'rb') as f:
-    item_features_trunc = pickle.load(f)
-# This is the truncated item features matrix
+# # This is the truncated item features matrix
 # with open('model/item_features_trunc.pkl', 'rb') as f:
 #     item_features = pickle.load(f)
 
