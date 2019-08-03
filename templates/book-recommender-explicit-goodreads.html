@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+
+<head>
+    <!-- Basic styles of the plugin -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script>var user_array = new Array(10000).fill(0);</script>
+    <title>Book Recommender</title>
+  </head>
+   
+  <body>
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+                <a class="navbar-brand" href="#">Book Recommender</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                  <ul class="navbar-nav">
+                    <li class="nav-item">
+                      <a class="nav-link" href="/">Home</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                              Goodreads
+                            </a>
+                            <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                              <a class="dropdown-item" href="/implicit-goodreads">Implicit Recommender</a>
+                              <a class="dropdown-item active" href="/explicit-goodreads">Explicit Recommender <span class="sr-only">(current)</span></a>
+                            </div>
+                    </li>
+                    <li class="nav-item">
+                      <a class="nav-link" href="#">Rate Them Yourself</a>
+                    </li>
+                  </ul>
+                </div>
+        </nav>
+    <div class="container my-5">
+        <div id="head" class="pb-2 mt-4 mb-2 border-bottom">
+            <h1>Explicit Recommender - Goodreads</h1>
+        </div>
+        <div class="row my-4" id="generate-div">
+            <div class="col-md-12">
+                <form>
+                        <div class="input-group mb-3">
+                                <div class="input-group-prepend">
+                                  <span class="input-group-text" id="basic-addon1">Goodreads User ID #</span>
+                                </div>
+                                <input id="goodreads-id" name='goodreads-id' type="text" class="form-control" placeholder="Goodreads User ID #" aria-label="User ID" aria-describedby="basic-addon1">
+                        </div>
+                    <input class="btn btn-primary" id="generate" type="submit" value="Generate Recommendations">
+                </form>
+            </div>
+        </div>
+        <div id="predictions">
+        </div>
+        <div class = "row" id="submit-div" style="display: none">
+                <div class="col-md-12">
+                    <input class="btn btn-primary" id="submit" type="submit" value="Submit Ratings">
+                </div>
+        </div>
+        <div class="row" id="acknowledgements">
+            <div class="col-md-12">
+                <p>This recommendation engine was built on the <a href="https://www.goodreads.com/">Goodreads</a> API,
+                    the <a href="https://github.com/lyst/lightfm">LightFM recommender model</a> by Maceij Kula
+                    and the <a href="https://github.com/zygmuntz/goodbooks-10k">goodbooks-10k book dataset</a> by Zygmunt Zając.</p>
+            </div>
+        </div>
+    </div>
+    <div id="loader"></div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/rateYo/2.3.2/jquery.rateyo.min.js"></script>
+    <script>
+            /* Javascript */
+            //Make sure that the dom is ready
+            $(function () {
+                $("#generate").click(function(event) {
+                    event.preventDefault()
+                    form_data = $('form').serializeArray()
+                    $.ajax({
+                        url:'/explicit-recommendations-goodreads',
+                        type:"GET",
+                        data:form_data,
+                        beforeSend: function() {
+                            $('#loader').show();
+                        },
+                        success: function(data){
+                            $('#predictions').html(data);
+                        },
+                        error: function(jqxhr, status, message) {
+                            alert(`Error: ${status} ${message}`);
+                        },
+                        complete: function() {
+                            $('#loader').hide();
+                        }
+                    });
+                });
+                $("#submit").click(function() {
+                    user_json = JSON.stringify({"array": user_array, "msg": "update"});
+                    $.ajax({
+                        url:'/explicit-recommendations-goodreads',
+                        type:"POST",
+                        data:user_json,
+                        contentType:"application/json; charset=utf-8",
+                        beforeSend: function() {
+                            $('#loader').show();
+                        },
+                        success: function(data, status){
+                            $('#predictions').html(data);
+                        },
+                        error: function(jqxhr, status, message) {
+                            console.log(`jqxhr: ${jqxhr}`);
+                            console.log(`status: ${status}`);
+                            console.log(`message: ${message}`);
+                        },
+                        complete: function() {
+                            $('#loader').hide();
+                        }
+                    });
+                });
+            });
+        </script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  </body>
