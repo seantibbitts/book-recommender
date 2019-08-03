@@ -64,9 +64,7 @@
                             $('#predictions').html(data);
                         },
                         error: function(jqxhr, status, message) {
-                            console.log(`jqxhr: ${jqxhr}`);
-                            console.log(`status: ${status}`);
-                            console.log(`message: ${message}`);
+                            alert(`Error: ${status} ${message}`);
                         },
                         complete: function() {
                             $('#loader').hide();

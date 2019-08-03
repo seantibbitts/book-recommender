@@ -16,6 +16,7 @@ from functions.helper_functions import (
     predict_for_user_knn_lightfm,
     get_ndcg_explicit_lightfm,
     ndcg_at_k,
+    average_precision,
     reviews_to_df,
     get_reviews,
     get_user_array,
@@ -65,6 +66,7 @@ with open('model/weights.pkl', 'rb') as f:
 with open('model/item_features.pkl', 'rb') as f:
     item_features = pickle.load(f)
 # # This is the truncated item features matrix
+# # Does not seem to have helped the slowness, and seems to hurt the model
 # with open('model/item_features_trunc.pkl', 'rb') as f:
 #     item_features = pickle.load(f)
 
@@ -118,6 +120,15 @@ def implicit_recs():
         print('Predictions generated')
         print(f'Time to generate predictions: {datetime.timedelta(seconds=finish_time-end_fitting_time)}')
         print(f'Time to run: {datetime.timedelta(seconds=time_elapsed)}')
+
+        item_id_map = dataset_explicit.mapping()[2]
+        all_item_ids = sorted(list(item_id_map.values()))
+        predicted = model_implicit.predict(53424, all_item_ids, item_features=item_features)
+        actual = interactions_implicit_arr[53424]
+        sort_inds = predicted.argsort()[::-1]
+        r = actual[sort_inds][:5]
+        ap = average_precision(r)
+        print(f'Average Precision @ 5 for current user: {ap}')
 
         return render_template('implicit_recommendations3.html', predictions = predictions)
     

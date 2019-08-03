@@ -1,5 +1,76 @@
-# NDCG at k from this code:
+# MAP@K and NDCG at k from this code:
 # https://gist.github.com/bwhite/3726239
+
+import numpy as np
+
+def precision_at_k(r, k):
+    """Score is precision @ k
+    Relevance is binary (nonzero is relevant).
+    >>> r = [0, 0, 1]
+    >>> precision_at_k(r, 1)
+    0.0
+    >>> precision_at_k(r, 2)
+    0.0
+    >>> precision_at_k(r, 3)
+    0.33333333333333331
+    >>> precision_at_k(r, 4)
+    Traceback (most recent call last):
+        File "<stdin>", line 1, in ?
+    ValueError: Relevance score length < k
+    Args:
+        r: Relevance scores (list or numpy) in rank order
+            (first element is the first item)
+    Returns:
+        Precision @ k
+    Raises:
+        ValueError: len(r) must be >= k
+    """
+    assert k >= 1
+    r = np.asarray(r)[:k] != 0
+    if r.size != k:
+        raise ValueError('Relevance score length < k')
+    return np.mean(r)
+
+
+def average_precision(r):
+    """Score is average precision (area under PR curve)
+    Relevance is binary (nonzero is relevant).
+    >>> r = [1, 1, 0, 1, 0, 1, 0, 0, 0, 1]
+    >>> delta_r = 1. / sum(r)
+    >>> sum([sum(r[:x + 1]) / (x + 1.) * delta_r for x, y in enumerate(r) if y])
+    0.7833333333333333
+    >>> average_precision(r)
+    0.78333333333333333
+    Args:
+        r: Relevance scores (list or numpy) in rank order
+            (first element is the first item)
+    Returns:
+        Average precision
+    """
+    r = np.asarray(r) != 0
+    out = [precision_at_k(r, k + 1) for k in range(r.size) if r[k]]
+    if not out:
+        return 0.
+    return np.mean(out)
+
+
+def mean_average_precision(rs):
+    """Score is mean average precision
+    Relevance is binary (nonzero is relevant).
+    >>> rs = [[1, 1, 0, 1, 0, 1, 0, 0, 0, 1]]
+    >>> mean_average_precision(rs)
+    0.78333333333333333
+    >>> rs = [[1, 1, 0, 1, 0, 1, 0, 0, 0, 1], [0]]
+    >>> mean_average_precision(rs)
+    0.39166666666666666
+    Args:
+        rs: Iterator of relevance scores (list or numpy) in rank order
+            (first element is the first item)
+    Returns:
+        Mean average precision
+    """
+    return np.mean([average_precision(r) for r in rs])
+
 
 def dcg_at_k(r, k, method=0):
     """Score is discounted cumulative gain (dcg)
@@ -87,7 +158,7 @@ def get_ndcg(predicted, actual, k):
         ndcgs.append(this_ndcg)
     return np.mean(ndcgs)
 
-def get_ndcg_implicit_lightfm(model, dataset, interactions, user_features=None, item_features=None, k=5):
+def get_map_implicit_lightfm(model, dataset, interactions, user_features=None, item_features=None, k=5):
     '''Returns the mean NDCG at k for a given model, dataset and interactions matrix'''
     from scipy import sparse
     import pandas as pd
@@ -98,17 +169,14 @@ def get_ndcg_implicit_lightfm(model, dataset, interactions, user_features=None, 
         actual = interactions
     item_id_map = dataset.mapping()[2]
     all_item_ids = sorted(list(item_id_map.values()))
-    ndcgs = []
-    rs = []
+    aps = []
     for user_id in range(interactions.shape[0]):
         predicted = model.predict(user_id, all_item_ids, user_features=user_features, item_features=item_features)
-        nonzero_actual = np.nonzero(actual[user_id])
-        sort_inds = predicted[nonzero_actual].argsort()[::-1]
-        r = actual[user_id][nonzero_actual][sort_inds]
-        rs.append(r)
-        this_ndcg = ndcg_at_k(r, k)
-        ndcgs.append(this_ndcg)
-    return np.mean(ndcgs)
+        sort_inds = predicted.argsort()[::-1]
+        r = actual[user_id][sort_inds][:k]
+        this_ap = average_precision(r)
+        aps.append(this_ap)
+    return np.mean(aps)
 
 def get_ndcg_explicit_lightfm(model, dataset, weights, user_features=None, item_features=None, k=5):
     '''Returns the mean NDCG at k for a given model, dataset and weight matrix'''
