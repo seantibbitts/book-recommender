@@ -22,8 +22,9 @@ from functions.helper_functions import (
     get_user_array,
     get_implicit_interactions
 )
-import keyring
-api_key = keyring.get_password('Goodreads API Key', 'Goodreads API Key')
+# import keyring
+# api_key = keyring.get_password('Goodreads API Key', 'Goodreads API Key')
+api_key = os.environ['GOODREADS_API_KEY']
 
 app=Flask(__name__)
 
@@ -241,7 +242,7 @@ def explicit_recs_ratings():
             model_explicit_ratings.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=5)
         print('Model fitting complete')
         sys.stdout.flush()
-        predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit_aug,
+        predictions = predict_for_user_explicit_lightfm(model_explicit_ratings, dataset_explicit, interactions_explicit_aug,
         books, item_features=item_features, model_user_id = 53424, num_recs = 24).to_dict(orient='records')
         time_elapsed = time.time() - start_time
         print('Predictions generated')
