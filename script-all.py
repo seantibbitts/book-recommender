@@ -51,10 +51,10 @@ with open('model/implicit_interactions.pkl', 'rb') as f:
 # # 10 components 1 epoch
 # with open('model/model_lfe-10-components-1-epoch.pkl', 'rb') as f:
 #     model_explicit = pickle.load(f)
-# # This is an edited/extended/custom LightFM model
-# # 10 components 200 epochs
-# with open('model/model_lfe-10-components-200-epoch.pkl', 'rb') as f:
-#     model_explicit = pickle.load(f)
+# This is an edited/extended/custom LightFM model
+# 10 components 200 epochs
+with open('model/model_lfe-10-components-200-epoch.pkl', 'rb') as f:
+    model_explicit_ratings = pickle.load(f)
 model_explicit = LightFM(no_components=50, loss='warp', random_state=42)
 with open('model/explicit_dataset.pkl', 'rb') as f:
     dataset_explicit = pickle.load(f)
@@ -200,10 +200,10 @@ def explicit_recs_gr():
 @app.route('/explicit-recommendations-ratings', methods = ['GET','POST'])
 def explicit_recs_ratings():
     if request.method == 'GET':
-        predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit,
+        predictions = predict_for_user_explicit_lightfm(model_explicit_ratings, dataset_explicit, interactions_explicit,
         books, item_features=item_features, model_user_id = 53424, num_recs = 24).to_dict(orient='records')
 
-        return render_template('explicit_recommendations2.html', predictions = predictions)
+        return render_template('explicit_recommendations_ratings.html', predictions = predictions)
     
     if request.method == 'POST':
         start_time = time.time()
@@ -233,12 +233,12 @@ def explicit_recs_ratings():
         if msg=='update':
             print('Now updating last matrix row')
             sys.stdout.flush()
-            model_explicit.fit_partial_by_row(53424, interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=50)
+            model_explicit_ratings.fit_partial_by_row(53424, interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=50)
         else:
             print('Now fitting updated matrix to model')
             sys.stdout.flush()
             # This takes between 1.5 to 8 minutes depending on the complexity of the model
-            model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=5)
+            model_explicit_ratings.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=5)
         print('Model fitting complete')
         sys.stdout.flush()
         predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit_aug,
@@ -249,7 +249,7 @@ def explicit_recs_ratings():
         sys.stdout.flush()
         item_id_map = dataset_explicit.mapping()[2]
         all_item_ids = sorted(list(item_id_map.values()))
-        predicted = model_explicit.predict(53424, all_item_ids)
+        predicted = model_explicit_ratings.predict(53424, all_item_ids)
         actual = weights_explicit_arr[53424]
         nonzero_actual = np.nonzero(actual)
         sort_inds = predicted[nonzero_actual].argsort()[::-1]
@@ -257,7 +257,7 @@ def explicit_recs_ratings():
         ndcg = ndcg_at_k(r, 5)
         print(f'nDCG for current user: {ndcg}')
 
-        return render_template('explicit_recommendations2.html', predictions = predictions)
+        return render_template('explicit_recommendations_ratings.html', predictions = predictions)
 
     # if request.method == 'POST':
     #     start_time = time.time()

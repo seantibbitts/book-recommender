@@ -12,7 +12,7 @@
    
   <body>
         <nav class="navbar navbar-expand-lg navbar-light bg-light">
-                <a class="navbar-brand" href="#">Book Recommender</a>
+                <a class="navbar-brand" href="/">Book Recommender</a>
                 <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                   <span class="navbar-toggler-icon"></span>
                 </button>
@@ -44,6 +44,7 @@
             <div class="col-md-12">
                 <ul>
                     <li>Goodreads Recommenders:
+                        <p>These pull reviews from any public Goodreads user account and generate recommendations based on those.</p>
                         <ul>
                             <li><a href="/implicit-goodreads">Implicit Recommender</a></li>
                             <li><a href="/explicit-goodreads">Explicit Recommender</a></li>
@@ -51,7 +52,7 @@
                     </li>
                     <li>Don't have a Goodreads account? Rate books and get recommendations.
                         <ul>
-                            <li><a href="/explicit-ratings">Explicit Ratings Recommender</a></li>
+                            <li><a href="/explicit-ratings">Rate-Your-Own Recommender</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -59,7 +60,7 @@
         </div>
         <div class="row" id="acknowledgements">
             <div class="col-md-12">
-                <p>This recommendation engine was built on the <a href="https://www.goodreads.com/">Goodreads</a> API,
+                <p>These recommendation engines were built on the <a href="https://www.goodreads.com/">Goodreads</a> API,
                     the <a href="https://github.com/lyst/lightfm">LightFM recommender model</a> by Maceij Kula
                     and the <a href="https://github.com/zygmuntz/goodbooks-10k">goodbooks-10k book dataset</a> by Zygmunt Zając.</p>
             </div>
