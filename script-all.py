@@ -31,16 +31,16 @@ app=Flask(__name__)
 # ratings = pd.read_csv('model/ratings.csv')
 # to_read = pd.read_csv('model/to_read.csv')
 books = pd.read_csv('model/books.csv')
-# with open('model/implicit_model.pkl', 'rb') as f:
-#     model_implicit = pickle.load(f)
-model_implicit = LightFM(no_components=50, loss='warp', random_state=42)
+with open('model/implicit_model.pkl', 'rb') as f:
+    model_implicit = pickle.load(f)
+# model_implicit = LightFM(no_components=50, loss='warp', random_state=42)
 with open('model/implicit_dataset.pkl', 'rb') as f:
     dataset_implicit = pickle.load(f)
 with open('model/implicit_interactions.pkl', 'rb') as f:
     interactions_implicit = pickle.load(f)
 # # This model has 10 components, uses the full item_features matrix and takes 1.5 minutes to train
-# with open('model/explicit_model.pkl', 'rb') as f:
-#     model_explicit = pickle.load(f)
+with open('model/explicit_model.pkl', 'rb') as f:
+    model_explicit = pickle.load(f)
 # # This has 10 components and uses the truncated item_features matrix
 # # Does not seem to have helped the slowness
 # with open('model/model_trunc.pkl', 'rb') as f:
@@ -56,7 +56,7 @@ with open('model/implicit_interactions.pkl', 'rb') as f:
 # 10 components 200 epochs
 with open('model/model_lfe-10-components-200-epoch.pkl', 'rb') as f:
     model_explicit_ratings = pickle.load(f)
-model_explicit = LightFM(no_components=50, loss='warp', random_state=42)
+# model_explicit = LightFM(no_components=50, loss='warp', random_state=42)
 with open('model/explicit_dataset.pkl', 'rb') as f:
     dataset_explicit = pickle.load(f)
 with open('model/explicit_interactions.pkl', 'rb') as f:
