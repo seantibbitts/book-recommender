@@ -1,0 +1,8 @@
+book_recommender_app_env
+*.pyc
+zappa_settings.json
+__pychache__
+functions/build
+functions/lightfm_ext/build
+functions/lightfm_ext/dist
+functions/lightfm_ext/lightfm_ext.egg-info
