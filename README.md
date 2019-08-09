@@ -40,3 +40,6 @@ and will allow you to play around with the recommenders.
 My original intention was to deploy this to Heroku, but it required too much RAM for the free tier. I then attempted
 to deploy it to AWS Lambda with Zappa, but the app is apparently too large. I may end up deploying this to a static
 AWS instance.
+
+This use case (an online recommender that can handle new users but not new books) might be better suited to an item-item
+similarity recommender system. I will look into that.
