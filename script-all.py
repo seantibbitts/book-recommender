@@ -31,7 +31,9 @@ app=Flask(__name__)
 # ratings = pd.read_csv('model/ratings.csv')
 # to_read = pd.read_csv('model/to_read.csv')
 books = pd.read_csv('model/books.csv')
-with open('model/implicit_model.pkl', 'rb') as f:
+# with open('model/implicit_model.pkl', 'rb') as f:
+#     model_implicit = pickle.load(f)
+with open('model/implicit_model_final.pkl', 'rb') as f:
     model_implicit = pickle.load(f)
 # model_implicit = LightFM(no_components=50, loss='warp', random_state=42)
 with open('model/implicit_dataset.pkl', 'rb') as f:
@@ -177,7 +179,7 @@ def explicit_recs_gr():
         print('Now fitting updated matrix to model')
         sys.stdout.flush()
         # This takes between 1.5 to 8 minutes depending on the complexity of the model
-        model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=5)
+        model_explicit.fit_partial(interactions_explicit_aug, sample_weight = weights_explicit_aug, item_features=item_features, epochs=1)
         print('Model fitting complete')
         sys.stdout.flush()
         predictions = predict_for_user_explicit_lightfm(model_explicit, dataset_explicit, interactions_explicit_aug,
