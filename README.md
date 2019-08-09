@@ -17,10 +17,10 @@ and the [goodbooks-10k book dataset](https://github.com/zygmuntz/goodbooks-10k) 
 
 ## Installation
 
-To install, clone the repo, cd into functions/lightfm_ext and run `pip install .`.
-This will install the 'lightfm_ext' package, which underlies the 'Rate-Your-Own Recommender.'
+You will need to install the original lightfm package. Follow the directions [here](https://github.com/lyst/lightfm).
 
-You will also need to install the original lightfm package. Follow the directions [here](https://github.com/lyst/lightfm).
+Then, once you have cloned the repo, cd into functions/lightfm_ext and run `pip install .`.
+This will install the 'lightfm_ext' package, which underlies the 'Rate-Your-Own Recommender.'
 
 ## Running
 
