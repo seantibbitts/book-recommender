@@ -24,7 +24,11 @@ from functions.helper_functions import (
 )
 # import keyring
 # api_key = keyring.get_password('Goodreads API Key', 'Goodreads API Key')
-api_key = os.environ['GOODREADS_API_KEY']
+# api_key = os.environ['GOODREADS_API_KEY']
+if len(sys.argv) > 1:
+    api_key = sys.argv[1]
+else:
+    api_key = os.environ['GOODREADS_API_KEY']
 
 app=Flask(__name__)
 
