@@ -17,14 +17,22 @@ and the [goodbooks-10k book dataset](https://github.com/zygmuntz/goodbooks-10k) 
 
 ## Installation
 
-You will need to install the original lightfm package. Follow the directions [here](https://github.com/lyst/lightfm).
+Once you have cloned the repo
+- Create a python virtual environment in whatever way you prefer
+- Activate the virtual environment
+- Run `pip install Cython`
+- cd into the top directory of the repo and run `pip install -r requirements.txt`
+This should install all of the dependencies in your virtual environment, including the 'lightfm_ext' package, which underlies the 'Rate-Your-Own Recommender.'
 
-Then, once you have cloned the repo, cd into functions/lightfm_ext and run `pip install .`.
-This will install the 'lightfm_ext' package, which underlies the 'Rate-Your-Own Recommender.'
+To run the Goodreads recommenders, you will need to sign up for a [Goodreads API key](https://www.goodreads.com/api/keys).
+You will then need to either pass the api key to the script at runtime or set the api key as an environmental variable
+called 'GOODREADS_API_KEY' in your virtual environment. Alternatively, you can edit script-all.py to pull from a different
+source (such as keyring).
 
 ## Running
 
-To run, cd into the top level of the repository and run `python script-all.py `. This will launch the Flask app,
+To run, cd into the top level of the repository and run `python script-all.py <api_key>`. (If you set the api key
+as an environmental variable, you can just run `python script-all.py`.) This will launch the Flask app,
 and will allow you to play around with the recommenders.
 
 ## Next Steps
